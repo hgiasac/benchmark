@@ -1,0 +1,103 @@
+#!/bin/sh
+#
+#  * Written by Gil Tene of Azul Systems, and released to the public domain,
+#  * as explained at http://creativecommons.org/publicdomain/zero/1.0/
+#
+# This script uses gnuplot to plot the percentile distribution in the
+# input files provided. run with "-h" option for an expected usage description.
+#
+# The script assumes the input files contain ".hgrm" formatted output such
+# as the one provided by HdrHistogram. The 4th column in the input files is
+# expected to be the value of 1/(1-percentile) (for a given percentile),
+# and the 1st column in the input files is expected to be the value at the
+# given percentile.
+#
+
+reading_SLA_NAME=0
+reading_OUTPUT_NAME=0
+helpFlagFound=0
+SLA_NAME=
+FILES=
+OUTPUT_FILENAME=
+reading_maxvalue=0
+maxvalue=
+
+for var in $@; do
+	if [ $reading_SLA_NAME -eq 1 ]; then
+		SLA_NAME=$var
+		reading_SLA_NAME=0
+	elif [ $reading_OUTPUT_NAME -eq 1 ]; then
+		OUTPUT_FILENAME=$var
+		reading_OUTPUT_NAME=0
+	elif [ $reading_maxvalue -eq 1 ]; then
+		maxvalue="set yrange [0:$var]"
+		reading_maxvalue=0
+	elif [ $var = "-h" ]; then
+		helpFlagFound=1
+	elif [ $var = "-o" ]; then
+		reading_OUTPUT_NAME=1
+	elif [ $var = "-s" ]; then
+		reading_SLA_NAME=1
+	elif [ $var = "-m" ]; then
+		reading_maxvalue=1
+	else
+		FILES="$FILES $var"
+	fi
+done
+
+message() {
+    echo "$@" >&2
+}
+
+if [ $helpFlagFound -eq 1 ]; then
+	message "Usage: make_percentile_plot [-o output_file] [-s sla_file] histogram_file ..."
+	exit 255
+fi
+
+XLABELS_FILE=/tmp/xlabels.dat
+
+echo "1.0	0.0	0%" > $XLABELS_FILE
+echo "10.0	0.0	90%" >> $XLABELS_FILE
+echo "100.0	0.0	99%" >> $XLABELS_FILE
+echo "1000.0	0.0	99.9%" >> $XLABELS_FILE
+echo "10000.0	0.0	99.99%" >> $XLABELS_FILE
+echo "100000.0	0.0	99.999%" >> $XLABELS_FILE
+echo "1000000.0	0.0	99.9999%" >> $XLABELS_FILE
+echo "10000000.0	0.0	99.99999%" >> $XLABELS_FILE
+
+IndividualFilePlotCommands="'$XLABELS_FILE' with labels center offset 0, -1.5 point title '$(basename $XLABELS_FILE)'"
+for file in $FILES; do
+	IndividualFilePlotCommands="$IndividualFilePlotCommands, '$file' using 4:1 with lines title '$(basename $file)'"
+done
+
+if [ $SLA_NAME ]; then
+	IndividualFilePlotCommands="$IndividualFilePlotCommands, '$SLA_NAME' with lines ls 1"
+	# message plotting "{ " $FILES " }" with SLA $SLA_NAME
+# else
+	# message plotting "{ " $FILES " }"
+fi
+
+# message command will be:
+# message $IndividualFilePlotCommands
+
+(
+    echo "#plot commands"
+    echo "set terminal pngcairo background rgb 'white' linewidth 4 size 1920,1080 enhanced font 'Arial,16'"
+    if [ $OUTPUT_FILENAME ]; then
+        echo "set output '$OUTPUT_FILENAME'"
+    fi
+		echo "set bmargin at screen 130.0/1080"
+		echo "set rmargin at screen 1850.0/1920"
+		echo "set title 'Latency by percentile Distribution' font 'Arial Bold,20'"
+		echo "set style data lines"
+		echo "set style line 100 lt 1 lc rgb 'grey' lw 0.5"
+		echo "set grid ls 100"
+		echo "set xlabel 'Percentile' offset 0,-2 point"
+		echo "set ylabel 'Latency (milliseconds)'"
+    echo "set logscale x"
+    echo "unset xtics"
+    echo "$maxvalue"
+    echo "set key top left"
+    echo "set style line 1 lt 1 lw 3 pt 3 linecolor rgb 'red'"
+    echo "plot $IndividualFilePlotCommands"
+) | gnuplot
