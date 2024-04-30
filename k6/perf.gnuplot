@@ -5,9 +5,9 @@ infile=ARG1
 outfile=ARG2
 ptitle=ARG3
 
-set terminal pngcairo background rgb 'white' linewidth 4 size 1200,600 enhanced font 'Arial,16'
-set bmargin at screen 130.0/600
-set rmargin at screen 1080.0/1200
+set terminal pngcairo background rgb 'white' linewidth 4 size 1920,1080 enhanced font 'Arial,16'
+set bmargin at screen 130.0/1080
+set rmargin at screen 1080.0/1920
 set output outfile
 
 set title sprintf('%s', ptitle) font 'Arial Bold,20'

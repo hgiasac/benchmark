@@ -14,10 +14,10 @@ TITLE="${TITLE:-Benchmark Result}"
 OUTPUT_PATH="$OUTPUT_DIR/$NAME"
 export SUMMARY_OUTPUT="$OUTPUT_DIR/$NAME.out"
 
-mkdir -p $OUTPUT_DIR 
+mkdir -p $OUTPUT_DIR
 
-$ROOT/k6bench.sh $@ > "$OUTPUT_PATH.csv"
+$ROOT/k6bench.sh $@ >"$OUTPUT_PATH.csv"
 echo
 cat $SUMMARY_OUTPUT
 $ROOT/perf.gnuplot "$OUTPUT_PATH.csv" "$OUTPUT_PATH.plot.png" "$TITLE"
-$ROOT/../monitor-usage/usage-plot.gp "$OUTPUT_PATH.csv" "$OUTPUT_PATH.usage.png"
+$ROOT/../monitor-usage/usage-plot.gp "$OUTPUT_PATH.csv" "$OUTPUT_PATH.usage.png" "$TITLE"

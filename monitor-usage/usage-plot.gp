@@ -7,8 +7,13 @@
 # Arguments:
 infile=ARG1
 outfile=ARG2
+title=ARG3
+if (!exists("ARG3")) {
+  title='benchmark'
+}
+
 set term x11
-set title 'Memory, CPU usage' font 'Arial Bold,20'
+set title 'Memory, CPU usage from ' . title font 'Arial Bold,20'
 
 set border 31 lw 0.5
 set style data lines
