@@ -7,7 +7,7 @@ ptitle=ARG3
 
 set terminal pngcairo background rgb 'white' linewidth 4 size 1920,1080 enhanced font 'Arial,16'
 set bmargin at screen 130.0/1080
-set rmargin at screen 1080.0/1920
+set rmargin at screen 1800.0/1920
 set output outfile
 
 set title sprintf('%s', ptitle) font 'Arial Bold,20'
